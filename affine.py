@@ -55,6 +55,7 @@ print 'Number of walkers =', nwalkers
 # or e.g. a small ball around (-5,-5) so we can see the migration fo the walkers. 
 p = np.array([[[-5,-5]+0.1*np.random.randn(D)*(prange[1,:]-prange[0,:]) for i in range(nwalkers)]])
 
+# Do nmoves for each walker, using the other walkers' positions to update.
 move_num = 0
 for move_num in range(nmoves-1):
 	newpos = []
