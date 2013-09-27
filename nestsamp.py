@@ -8,12 +8,12 @@ from matplotlib.patches import Ellipse
 plt.rc('text',usetex=True)
 plt.rc('font',**{'family':'serif','serif':['Computer Modern'],'size':22})
 
-N=300 		## Size of active set
+N=300 			## Size of active set
 D=2			## Number of parameters
-f=1.06 		## Expansion factor for the ellipsoid
+f=1.06 			## Expansion factor for the ellipsoid
 
-c = np.identity(D) ## Target distribution covariance (toy-model Gaussian example)
-data=[0 for i in range(D)] ## Target mean
+c = np.identity(D) 		## Target distribution covariance (toy-model Gaussian example)
+data=[0 for i in range(D)] 	## Target mean
 invc=np.linalg.inv(c)
 detc=np.linalg.det(c)
 
@@ -21,7 +21,7 @@ prange=[[-10,10] for i in range(D)] ## Set the prior range
 
 ## Model functional form
 def model(samplpnts):
-	func=samplpnts ## Usually the model will have a more complex form
+	func=samplpnts 
 	return func
 
 ## Likelihood (toy-model Gaussian)
@@ -85,13 +85,13 @@ for i in range(D):
 
 x=np.array(x).T
 
-Levals=0 ## Set counter to zero. 
-L=LL(x) ## L now holds the log-likelihood values of the active set
+Levals=0 		## Set counter to zero. 
+L=LL(x			## L now holds the log-likelihood values of the active set
 Levals += N
 
-deltalogZ=1. 	# Test statistic determines when to stop the algorithm
+deltalogZ=1. 		# Test statistic determines when to stop the algorithm
 evidence=0.		# Evidence accumulated is currently zero
-i=0				# Set iteration counter to zero
+i=0			# Set iteration counter to zero
 testfail=0
 count=1
 Levals=0
@@ -99,13 +99,13 @@ oprior=0
 
 s = np.exp(0.1) - 1
 while (deltalogZ>s):
-	T,cent,el=covmat(x)  ## Gives the covariance matrix and centroid and ellipse
+	T,cent,el=covmat(x)  	## Gives the covariance matrix and centroid and ellipse
 	index_min=np.argmin(L)
-	x_mem=np.append(x_mem,[x[index_min]],axis=0) ## Add sample point to x_mem
-	L_mem=np.append(L_mem,L[index_min]) ## Add sample point to L_mem
+	x_mem=np.append(x_mem,[x[index_min]],axis=0) 	## Add sample point to x_mem
+	L_mem=np.append(L_mem,L[index_min]) 		## Add sample point to L_mem
 	
-	x=np.delete(x,index_min,axis=0) ## Remove the element from the active set x.
-	L=np.delete(L,index_min) ## Remove the element from the active set L
+	x=np.delete(x,index_min,axis=0) 	## Remove the element from the active set x.
+	L=np.delete(L,index_min) 		## Remove the element from the active set L
 
 	ytrail=drawsamp(T,cent)
 	while outrange(ytrail)==True:
