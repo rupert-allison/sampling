@@ -11,7 +11,7 @@ plt.rc('font',**{'family':'serif','serif':['Computer Modern'],'size':22})
 
 D = 2			## Dimensionality of the parameter space
 a = 2.			## Step-size parameter (see arxiv:1202.3665)
-nwalkers = 100	## Number of walkers
+nwalkers = 100		## Number of walkers
 
 def lnprob(x, mu, invc):
     diff = x-mu
