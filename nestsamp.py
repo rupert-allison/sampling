@@ -86,7 +86,7 @@ for i in range(D):
 x=np.array(x).T
 
 Levals=0 		## Set counter to zero. 
-L=LL(x			## L now holds the log-likelihood values of the active set
+L=LL(x)			## L now holds the log-likelihood values of the active set
 Levals += N
 
 deltalogZ=1. 		# Test statistic determines when to stop the algorithm
