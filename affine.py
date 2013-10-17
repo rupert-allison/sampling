@@ -1,8 +1,6 @@
 ## AFFINE.PY
 
 import numpy as np
-import emcee
-import acor
 import matplotlib.pyplot as plt
 
 ## Formatting for plots
