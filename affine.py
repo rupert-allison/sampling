@@ -44,7 +44,7 @@ print cov
 icov = np.linalg.inv(cov)
 nmoves = 1000
 
-# We'll sample with 500 walkers.
+# Set the number of walkers.
 nwalkers = 50
 print 'Number of parameters =', D
 print 'Number of walkers =', nwalkers
