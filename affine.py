@@ -70,7 +70,7 @@ for move_num in range(nmoves-1):
 			z = density()
 			y = rand_walker + z*(cur_walker - rand_walker)
 			orange = outrange(y)
-			orange = False
+			#orange = False
 		q = (D - 1)*np.log(z) + lnprob(y, data, icov) - lnprob(cur_walker, data, icov)
 		r = np.log(np.random.random())
 		if r <= q: newpos.append(y)
