@@ -8,20 +8,30 @@ from matplotlib.patches import Ellipse
 plt.rc('text',usetex=True)
 plt.rc('font',**{'family':'serif','serif':['Computer Modern'],'size':22})
 
-N=300 			## Size of active set
-D=2			## Number of parameters
-f=1.06 			## Expansion factor for the ellipsoid
+N=300 					## Size of active set
+D=2						## Number of parameters
+f=1.06 					## Expansion factor for the ellipsoid
+output = 'outputNS.txt' ## Name of the file to contain weights and sample points
 
-c = np.identity(D) 		## Target distribution covariance (toy-model Gaussian example)
-data=[0 for i in range(D)] 	## Target mean
+c = np.identity(D) ## Target distribution covariance (toy-model Gaussian example)
+inputstd = np.sqrt(np.array([c[i,i] for i in range(D)])) ## Calc. marginalised widths
+prange=[[-10.,10.] for i in range(D)] ## Set the prior range
+data=[0. for i in range(D)] ## Target mean
 invc=np.linalg.inv(c)
 detc=np.linalg.det(c)
 
-prange=[[-10,10] for i in range(D)] ## Set the prior range
+print 'INPUT MEANS:'
+print data
+print 'INPUT STD:'
+print inputstd
+print 'INPUT COVMAT:'
+print c
+
+## ------------------------------------------------------ ##
 
 ## Model functional form
 def model(samplpnts):
-	func=samplpnts 
+	func=samplpnts ## Usually the model will have a more complex form
 	return func
 
 ## Likelihood (toy-model Gaussian)
@@ -75,8 +85,13 @@ def outrange(y):
 			if y[j]>prange[j][1] or y[j]<prange[j][0]: outrange=True
 	return outrange
 
-x_mem=np.array([[] for i in range(D)]).T ## Define the memory arrays
-L_mem=np.array([])
+## ------------------------------------------------------ ##
+
+## Let's set up active set and the arrays to hold the sample points
+## and their likelihood
+
+x_samp=np.array([[] for i in range(D)]).T ## Define the memory arrays
+L_samp=np.array([])
 
 x=[] ## Define the first initial active set of N points
 for i in range(D):
@@ -85,27 +100,31 @@ for i in range(D):
 
 x=np.array(x).T
 
-Levals=0 		## Set counter to zero. 
-L=LL(x)			## L now holds the log-likelihood values of the active set
+Levals=0 ## Set counter to zero. 
+L=LL(x) ## L now holds the log-likelihood values of the active set
 Levals += N
 
-deltalogZ=1. 		# Test statistic determines when to stop the algorithm
+deltalogZ=1. 	# Test statistic determines when to stop the algorithm
 evidence=0.		# Evidence accumulated is currently zero
-i=0			# Set iteration counter to zero
+i=0				# Set iteration counter to zero
+
+## Define a few counters for evaluating meta-statistics
 testfail=0
 count=1
 Levals=0
 oprior=0
 
+## Now let's start the sampling!
+
 s = np.exp(0.1) - 1
 while (deltalogZ>s):
-	T,cent,el=covmat(x)  	## Gives the covariance matrix and centroid and ellipse
+	T,cent,el=covmat(x)  ## Gives the covariance matrix and centroid and ellipse
 	index_min=np.argmin(L)
-	x_mem=np.append(x_mem,[x[index_min]],axis=0) 	## Add sample point to x_mem
-	L_mem=np.append(L_mem,L[index_min]) 		## Add sample point to L_mem
+	x_samp=np.append(x_samp,[x[index_min]],axis=0) ## Add sample point to x_samp
+	L_samp=np.append(L_samp,L[index_min]) ## Add sample point to L_samp
 	
-	x=np.delete(x,index_min,axis=0) 	## Remove the element from the active set x.
-	L=np.delete(L,index_min) 		## Remove the element from the active set L
+	x=np.delete(x,index_min,axis=0) ## Remove the element from the active set x.
+	L=np.delete(L,index_min) ## Remove the element from the active set L
 
 	ytrail=drawsamp(T,cent)
 	while outrange(ytrail)==True:
@@ -113,7 +132,7 @@ while (deltalogZ>s):
 		ytrail=drawsamp(T,cent)
 	Ltrail=LL(np.array([ytrail]))
 	Levals+=1
-	while (Ltrail<=L_mem[i]):
+	while (Ltrail<=L_samp[i]):
 		testfail+=1
 		ytrail=drawsamp(T,cent)
 		while outrange(ytrail)==True:
@@ -126,41 +145,53 @@ while (deltalogZ>s):
 	L=np.append(L,Ltrail,axis=0)
 	
 	Lmax=L[np.argmax(L)] 
-	evidence+=np.exp(L_mem[i])*w(i+1)
+	evidence+=np.exp(L_samp[i])*w(i+1)
 	if evidence>0.: deltalogZ=(priorvol(i)*np.exp(Lmax))/evidence
 	
 	M=i ## define M as the number of iterations until convergence
 	i+=1
 
-
-print 'Number of iterations =',M
+## Print off some stats
+print '------------------'
+print 'Number of iterations =', M
 print 'Number of likelihood evaluations =', Levals
 print 'Number which failed test =', testfail
 print 'Fraction of failures = %.3f' % float(testfail*1./(testfail+M))
 print 'Number outside prior range =',oprior
 
-## Append the active sets to the memory sets
+## Append the active set to the sample points
 
-x_mem=np.append(x_mem,x,axis=0)
-L_mem=np.append(L_mem,L)
+x_samp=np.append(x_samp,x,axis=0)
+L_samp=np.append(L_samp,L)
 
-pi=np.zeros(M+1+N) ## Initialise an array of weights 
+## Define the weights for each sample point based on their order
+## and likelihood
+pi=np.zeros(M+1+N) 
 for j in range(M+1):
-	pi[j]=np.exp(L_mem[j])*w(j+1)
+	pi[j]=np.exp(L_samp[j])*w(j+1)
 for j in range(M+1,M+1+N):
-	pi[j]=np.exp(L_mem[j])*priorvol(j)/N
+	pi[j]=np.exp(L_samp[j])*priorvol(M)/N
+	evidence += np.exp(L_samp[j])*priorvol(M)/N
 
-mean=np.average(x_mem,weights=pi,axis=0)
+pi /= evidence
+
+## Compute the inferred mean and covariance of the posterior
+mean=np.average(x_samp,weights=pi,axis=0)
 meascov=np.zeros((D,D))
 for i in range(D):
 	for j in range(D):
-		meascov[i][j]=np.average((x_mem.T[i]-mean[i])*\
-			(x_mem.T[j]-mean[j]),weights=pi)
+		meascov[i][j]=np.average((x_samp.T[i]-mean[i])*\
+			(x_samp.T[j]-mean[j]),weights=pi)
 
+## Print off the lowest-order posterior statistics
 print '------------------'
-print 'Mean of distribution ='
+print 'Posterior mean ='
 print mean
 print '------------------'
-print 'Covariance of distribution ='
+print 'Posterior covariance ='
 print meascov
 print '------------------'
+
+## Save the weights, likelihoods and sample points into output file
+master = np.append(np.reshape(pi, (np.shape(pi)[0],1)),np.append(np.reshape(L_samp, (np.shape(L_samp)[0],1)), x_samp, axis = 1) , axis = 1)
+np.savetxt(output, master, delimiter = '\t', fmt = '% .5e' )
