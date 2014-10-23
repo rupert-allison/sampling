@@ -40,7 +40,7 @@ def LL(samplpnts):
 	dev=model(samplpnts)-data[:D]
 	L=np.array([np.dot(dev[j],np.dot(invc,dev[j])) for j in \
 	range(len(samplpnts))])
-	return -0.5*L
+	return -0.5 * (L + const)
 	
 def covmat(x):
 	
